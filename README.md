@@ -28,6 +28,8 @@ source("Supervised ML.R")
 
 ## 📖 Quick Start
 ```R
+clinical_data <- read.csv("data/sample_clinical_data.csv")
+
 results <- supervised_ml(
   modeling_data = my_clinical_data,
   model_type = "lgbm",           # Options: "rf", "xgb", "lgbm", "lr", "svm"
@@ -40,16 +42,22 @@ results <- supervised_ml(
 ```
 
 ## 📂 Project Structure
-* **Supervised ML.R**: The core engine containing the supervised_ml function.
-* **README.md**: Project documentation and setup guide.
-* **.gitignore**: Configured to exclude large .rds model files and temporary R data.
-
+* **`data/`**: Contains `sample_clinical_data.csv` (Synthetic clinical dataset for testing).
+* **`Supervised ML.R`**: The core engine containing the supervised_ml function.
+* **`README.md`**: Project documentation and setup guide.
+* **`demonstration.Rmd`**: A step-by-step tutorial using the sample data.
+* **`.gitignore`**: Configured to protect private data while allowing sample files.
+  
 ## 📊 Visual Outputs
 The framework automatically exports publication-quality plots:
 * **Diagnostic Dashboard**: ROC/PR curves, Calibration, and Confusion Matrices.
 * **SHAP Beeswarm**: Global feature impact on model predictions.
 * **Clinical Case Studies**: SHAP Waterfall plots for True Positives, False Positives, and Borderline cases.
 * **Forest Plots**: Mean bootstrap Odds Ratios/Coefficients with 95% CIs (for lr models).
+
+## 🔒 Data Privacy & Synthetic Data
+
+The dataset provided in `data/sample_clinical_data.csv` is **synthetic**. It was generated using the `synthpop` package in R to mirror the statistical distributions and correlations of real clinical parameters while containing zero actual patient information. This ensures the framework can be tested safely and reproducibly.
 
 ## ⚖️ License
 Copyright 2026 Rohit Agrawal
