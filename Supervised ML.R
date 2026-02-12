@@ -39,6 +39,7 @@ supervised_ml <- function(
     finetune, # Racing methods for hyperparameter tuning
     themis, # Dealing with class imbalance (SMOTE/Downsampling)
     FSelectorRcpp, # Information gain / Feature selection
+    lsr, # For etaSquared (Categorical feature selection in regression) 
     purrr, # For function map_dfr
     energy, # For dcor (Distance Correlation)
 
@@ -111,18 +112,27 @@ supervised_ml <- function(
       mutate(overall_score = (a * b * c)^(1 / 3)) %>%
       arrange(desc(overall_score))
   } else {
-    ### 3.1.2 Regression ----------
+    ### 3.1.2 Regression (Enhanced for Categorical & Numeric) ----------
     target_vec <- cell_train[[target]]
     features_to_test <- cell_train %>% select(-all_of(c(id_var, target)))
-
     feature_selection_results <- map_dfr(names(features_to_test), function(feat_name) {
       feat_vec <- features_to_test[[feat_name]]
-      tibble(
-        feature = feat_name,
-        a = abs(cor(feat_vec, target_vec, method = "pearson", use = "complete.obs")),
-        b = abs(cor(feat_vec, target_vec, method = "spearman", use = "complete.obs")),
-        c = energy::dcor(feat_vec, target_vec)
-      )
+      # Logic for Numeric Predictors (Correlation)
+      if(is.numeric(feat_vec)) {
+        temp_df <- data.frame(v1 = feat_vec, v2 = target_vec) %>% filter(complete.cases(.))
+        a_val <- abs(cor(temp_df$v1, temp_df$v2, method = "pearson"))
+        b_val <- abs(cor(temp_df$v1, temp_df$v2, method = "spearman"))
+        c_val <- energy::dcor(temp_df$v1, temp_df$v2)
+      } else {
+        # Logic for Categorical Predictors (Eta-squared via ANOVA)
+        # This measures how much variance in the target is explained by the category
+        mod <- lm(target_vec ~ feat_vec)
+        eta_sq <- lsr::etaSquared(mod)[1]
+        a_val <- eta_sq
+        b_val <- eta_sq
+        c_val <- eta_sq
+      }
+      tibble(feature = feat_name, a = a_val, b = b_val, c = c_val)
     }) %>%
       mutate(overall_score = (a * b * c)^(1 / 3)) %>%
       arrange(desc(overall_score))
@@ -1375,4 +1385,5 @@ supervised_ml <- function(
     boot_dist = boot_metrics,
     cv_results = cv_fold_data
   ))
+
 }
