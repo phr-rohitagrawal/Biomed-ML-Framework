@@ -41,40 +41,40 @@ While `pacman` automates this, the framework relies on these key libraries:
 > [!IMPORTANT]
 > **Initial Setup** > If you are running this for the first time, ensure you have an active internet connection so `pacman` can fetch the library stack. Run `install.packages("pacman")` if it is not already installed.
 
-## 📖 Quick Start
-```R
-clinical_data <- read.csv("data/sample_clinical_data.csv")
-
-results <- supervised_ml(
-  modeling_data = sample_clinical_data,
-  model_type = "lgbm",           # Options: "rf" (Random Forest), "xgb" (XGBoost), "lgbm" (LightGBM), "lr" (Penalized Linear or Logistic Regression), "svm" (Support Vector Machine)
-  mode = "classification",       # Options: "classification", "regression"
-  id_var = "CODE",               # Any id variable in data that is not part of analysis
-  target = "Outcome_Variable",   # The target variable
-  event_level = "Yes",           # The label of event in case of categorical target variable, can be "Yes" or "1" or anything else
-  control_level = "No",          # The label of control in case of categorical target variable, can be "No" or "0" or anything else
-  num_cols = c(2,9,10,11,12,13,15),               # Indices of numeric predictors
-  cat_cols = c(3,4,5,6,7,8,14),              # Indices of categorical predictors
-  train_split = 0.8,             # Ratio of split of training and testing datasets
-  cv_nfolds = 10,                # Number of folds of Cross-validation
-  cv_repeats = 10,               # Number of repeats of cross-validation
-  n_grid = 100,                  # Number of grids through which hyperparameter is to be tuned
-  n_boot_metrics = 500,          # Number of bootstraps for estimation of metrics confidence intervals
-  nsim_shap = 100,               # Number of repeats during SHAP estimation
-  top_n_features = NULL,         # Top N features to prune the dataset
-  prefix = "LGBM",               # Prefix for name of the output files
-  output_dir = "Model_Results"
-)
-```
-
 ## 📂 Project Structure
 | File / Folder | Description |
 | :--- | :--- |
 | **`Supervised ML.R`** | The core framework engine. Contains the `supervised_ml` function, data preprocessing pipelines, and the SHAP-based interpretability logic. |
-| **`sample_clinical_data.csv`** | Synthetic clinical dataset for testing. Includes demographics, CCI scores, and medication data. |
+| **`data`** | Contains `sample_clinical_data.csv`, Synthetic clinical dataset for testing. |
+| **`Demo_Model_Results`** | Contains outputs of the demo model run. |
 | **`README.md`** | Documentation, installation instructions, and quick-start guide. |
 | **`LICENSE`** | Full text of the Apache License 2.0. |
 | **`.gitignore`** | Prevents R environment files (`.Rhistory`, `.RData`) and large model outputs from being tracked. |
+
+## 🛠️ Function Arguments
+
+The `supervised_ml` function is the core entry point of the framework. Below are the parameters you can use to customize your analysis.
+
+| Argument | Type | Description |
+| :--- | :--- | :--- |
+| **`modeling_data`** | Data Frame | The raw clinical dataset containing predictors and the outcome variable. |
+| **`model_type`** | String | Defines the engine: `"rf"` (Random Forest), `"xgb"` (XGBoost), `"lgbm"` (LightGBM), `"lr"` (Penalized logistic or linear regression), or `"svm"` (Support Vector Machine). |
+| **`mode`** | String | Analysis mode: `"classification"` or `"regression"`. |
+| **`id_var`** | String | The name of the unique identifier column (e.g., `"CODE"`). |
+| **`target`** | String | The name of the target variable (e.g., `"Encounter_with_PIM"`). |
+| **`event_level`** | String | The label of the positive class/event (e.g., `"Yes"` or `"1"`). |
+| **`control_level`** | String | The label of the control class (e.g., `"No"` or `"0"`). |
+| **`num_cols`** | Integer (Vector) | Column indices of the numerical predictors. |
+| **`cat_cols`** | Integer (Vector) | Column indices of the categorical predictors. |
+| **`train_split`** | Numeric | Proportion of data for training (e.g., `0.75`). Default is 0.8. |
+| **`cv_nfolds`** | Integer | Number of folds for cross-validation (e.g., `10`). Default is 10. |
+| **`cv_repeats`** | Integer | Number of repeats for cross-validation (e.g., `5`). Default is 10. |
+| **`n_grid`** | Integer | Number of hyperparameter combinations to test during tuning. Default is 100. |
+| **`n_boot_metrics`**| Integer | Number of bootstrap resamples for metric evaluation (e.g., `500`). Default is 500. |
+| **`nsim_shap`** | Integer | Number of simulations for SHAP value estimation. Default is 100.|
+| **`top_n_features`**| Integer | Number of top features to keep after engineering. Set to `NULL` to keep all. |
+| **`prefix`** | String | String used for naming output folders and files (e.g., `"Model_v1"`). |
+| **`output_dir`** | String | Root directory where all results, plots, and RDS files are stored. |
 
 ## 🔄 Framework Workflow
 The `supervised_ml` function follows a structured, multi-stage pipeline designed for reproducibility and clinical rigor:
@@ -173,7 +173,48 @@ To ensure a rigorous test environment, the synthetic data includes:
 * **Clinical Indicators**: Primary Diagnosis (HTN, DM, COPD), Chronic Condition counts, Health-related quality of life (EQ Utility Score), and **CCI Score** (Charlson Comorbidity Index).
 * **Treatment Metrics**: Medication duration, total number of medications, medication adherence scores, and Encounter with PIM.
 * **Primary Target**: `Total_PROMPT_QoL_Score`, a continuous outcome variable, measure of medication-related quality of life.
-  
+
+## 📖 Demo Model Run
+```R
+sample_clinical_data <- read.csv("data/sample_clinical_data.csv")
+
+results <- supervised_ml(
+  modeling_data = sample_clinical_data,
+  model_type = "rf",          
+  mode = "regression",
+  id_var = "CODE",
+  target = "Total_PROMPT_Qol_Score",
+  num_cols = c(2,9,10,11,12,13,15),
+  cat_cols = c(3,4,5,6,7,8,14), 
+  train_split = 0.8,   
+  cv_nfolds = 10,  
+  cv_repeats = 10, 
+  n_grid = 100,
+  n_boot_metrics = 500, 
+  nsim_shap = 100, 
+  top_n_features = NULL, 
+  prefix = "Demo_Model", 
+  output_dir = "Demo_Model_Results"
+)
+```
+
+## 📈 Latest Framework Results (Demo Run)
+Below are the outputs generated by applying the **Biomed-ML-Framework** to the provided synthetic clinical dataset.
+### **Model Performance**
+![Diagnostic Dashboard](./Demo_Model_Results/Demo_Model_Diagnostic_Dashboard.png)
+
+### **Clinical Interpretability (XAI)**
+![SHAP Importance](./Demo_Model_Results/Demo_Model_SHAP_Beeswarm_Original.png)
+
+### **Feature Interaction (SHAP Dependence Plots)**
+![SHAP_Dependence_Plots](./Demo_Model_Results/Demo_Model_SHAP_Dependence_Grid.png)
+
+### **SHAP Local (SHAP Waterfall Archetype Plots)**
+![SHAP_Waterfall_Plots](./Demo_Model_Results/Demo_Model_SHAP_Waterfall_Archetypes.png)
+
+> [!NOTE]
+> Detailed metrics and 95% Confidence Intervals are available in the `Demo_Model_Results/Demo_Model_Results.xlsx` file.
+
 ## ⚖️ License
 Copyright 2026 Rohit Agrawal
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
